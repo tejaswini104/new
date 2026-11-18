@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idea Board</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        input { padding: 8px; margin-right: 10px; }
+        button { padding: 8px 16px; cursor: pointer; }
+        li { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [ideas, setIdeas] = useState([]);
+            const [content, setContent] = useState('');
+
+            const fetchIdeas = async () => {
+                const res = await fetch('/api/ideas');
+                const data = await res.json();
+                setIdeas(data);
+            };
+
+            useEffect(() => { fetchIdeas(); }, []);
+
+            const submitIdea = async (e) => {
+                e.preventDefault();
+                await fetch('/api/ideas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                setContent('');
+                fetchIdeas();
+            };
+
+            return (
+                <div>
+                    <h1>Idea Board</h1>
+                    <form onSubmit={submitIdea}>
+                        <input value={content} onChange={e => setContent(e.target.value)} placeholder="New idea..." required />
+                        <button type="submit">Add</button>
+                    </form>
+                    <ul>
+                        {ideas.map(i => <li key={i.id}>{i.content}</li>)}
+                    </ul>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
